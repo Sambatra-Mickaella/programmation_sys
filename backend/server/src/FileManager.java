@@ -90,7 +90,6 @@ public class FileManager {
         }
     }
 
-    // Optionnel : si tu veux recharger manuellement (admin cmd par ex)
     public void forceReload() {
         reloadQuotas();
         reloadPermissions();
