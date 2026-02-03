@@ -5,7 +5,7 @@ import java.util.Scanner;
 public class MainClient {
     public static void main(String[] args) {
         try (
-            Socket socket = new Socket("127.0.0.1", 2121);
+            Socket socket = new Socket("127.0.0.1", 2100); // Connexion au LoadBalancer
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
             Scanner sc = new Scanner(System.in)

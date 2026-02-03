@@ -7,6 +7,7 @@ public class ClientThread implements Runnable {
     private final Socket socket;
     private final FileManager fileManager;
     private String username;
+    private static final ServerConfig CONFIG = ServerConfig.load();
 
     public ClientThread(Socket s, FileManager fm) {
         this.socket = s;
@@ -93,8 +94,7 @@ public class ClientThread implements Runnable {
             return;
         }
 
-        String userDirPath = "shared_storage/users/" + username + "/";
-        File userDir = new File(userDirPath);
+        File userDir = new File(getStorageRoot(), "users" + File.separator + username);
         if (!userDir.exists() && !userDir.mkdirs()) {
             writer.println("ERROR Cannot create user directory");
             return;
@@ -110,7 +110,7 @@ public class ClientThread implements Runnable {
             return;
         }
 
-        File targetFile = new File(userDirPath + filename);
+        File targetFile = new File(userDir, filename);
 
         writer.println("READY");
         writer.flush();
@@ -136,6 +136,7 @@ public class ClientThread implements Runnable {
                 fileManager.consumeQuota(username, size);
                 writer.println("OK Upload successful");
                 System.out.println("[UPLOAD] Succès : " + username + " → " + filename + " (" + size + " octets)");
+                replicateToSlaveAsync(username, filename, size, targetFile);
             }
         } catch (IOException e) {
             System.out.println("[UPLOAD] Erreur : " + e.getMessage());
@@ -151,8 +152,8 @@ public class ClientThread implements Runnable {
         }
 
         String filename = parts[1].trim();
-        String userDirPath = "shared_storage/users/" + username + "/";
-        File file = new File(userDirPath + filename);
+        File userDir = new File(getStorageRoot(), "users" + File.separator + username);
+        File file = new File(userDir, filename);
 
         if (!file.exists() || !file.isFile()) {
             writer.println("ERROR File not found");
@@ -177,8 +178,7 @@ public class ClientThread implements Runnable {
     }
 
     private void handleList(PrintWriter writer) {
-        String userDirPath = "shared_storage/users/" + username + "/";
-        File dir = new File(userDirPath);
+        File dir = new File(getStorageRoot(), "users" + File.separator + username);
 
         if (!dir.exists() || !dir.isDirectory()) {
             writer.println("0");
@@ -200,5 +200,61 @@ public class ClientThread implements Runnable {
             }
         }
         writer.println("END");
+    }
+
+    private static String getStorageRoot() {
+        return CONFIG.getStorageRoot();
+    }
+
+    private static String getSlaveHost() {
+        return CONFIG.getSlaveHost();
+    }
+
+    private static int getSlavePort() {
+        return CONFIG.getSlavePort();
+    }
+
+    private void replicateToSlaveAsync(String user, String filename, long size, File localFile) {
+        String host = getSlaveHost();
+        int port = getSlavePort();
+        if (host == null || host.trim().isEmpty()) return;
+        if (!localFile.exists() || !localFile.isFile()) return;
+
+        new Thread(() -> replicateToSlave(user, filename, size, localFile, host, port)).start();
+    }
+
+    private void replicateToSlave(String user, String filename, long size, File localFile, String host, int port) {
+        try (
+            Socket slaveSocket = new Socket(host, port);
+            BufferedReader in = new BufferedReader(new InputStreamReader(slaveSocket.getInputStream()));
+            PrintWriter out = new PrintWriter(slaveSocket.getOutputStream(), true);
+            FileInputStream fis = new FileInputStream(localFile)
+        ) {
+            out.println("REPLICA;" + user + ";" + filename + ";" + size);
+            out.flush();
+
+            String response = in.readLine();
+            if (response == null || !response.equalsIgnoreCase("READY")) {
+                System.out.println("[REPLICA] Refus du slave: " + response);
+                return;
+            }
+
+            OutputStream os = slaveSocket.getOutputStream();
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = fis.read(buffer)) != -1) {
+                os.write(buffer, 0, read);
+            }
+            os.flush();
+
+            String result = in.readLine();
+            if (result == null || !result.equalsIgnoreCase("OK")) {
+                System.out.println("[REPLICA] Erreur du slave: " + result);
+            } else {
+                System.out.println("[REPLICA] Copie OK vers " + host + ":" + port + " (" + filename + ")");
+            }
+        } catch (Exception e) {
+            System.out.println("[REPLICA] Échec vers " + host + ":" + port + " : " + e.getMessage());
+        }
     }
 }
