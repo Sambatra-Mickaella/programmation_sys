@@ -2,6 +2,8 @@ package controller;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 
 import jakarta.servlet.ServletException;
@@ -11,9 +13,34 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.Serveur;
 import model.User;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 public class UserServlet extends HttpServlet {
-    private Serveur serveur = new Serveur("127.0.0.1", 2121);    
+    private Serveur serveur;
+
+    @Override
+    public void init() throws ServletException {
+        super.init();
+        String serverIp = "127.0.0.1";
+        int serverPort = 2100;
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream("config.json")) {
+            if (is != null) {
+                JSONObject cfg = (JSONObject) new JSONParser().parse(new InputStreamReader(is));
+                Object ipObj = cfg.get("server_ip");
+                Object portObj = cfg.get("server_port");
+                if (ipObj != null) {
+                    serverIp = ipObj.toString();
+                }
+                if (portObj != null) {
+                    serverPort = Integer.parseInt(portObj.toString());
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        serveur = new Serveur(serverIp, serverPort);
+    }
     
     // === Bloc des méthodes POST ===
     @Override

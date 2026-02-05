@@ -1,7 +1,9 @@
 {
+  "lb_port": 2100,
   "servers": [
     {"ip": "127.0.0.1", "port": 2121},
-    {"ip": "127.0.0.1", "port": 2122}
+    {"ip": "127.0.0.1", "port": 2122},
+    {"ip": "127.0.0.1", "port": 2123}
   ],
-  "max_clients_per_server": 2
+  "max_clients_per_server": 3
 }

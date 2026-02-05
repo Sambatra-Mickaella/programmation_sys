@@ -2,18 +2,28 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+
 public class LoadBalancer {
     private static List<ServerInfo> servers = new ArrayList<>();
     private static Map<ServerInfo, Integer> serverClients = new HashMap<>();
+    private static int maxClientsPerServer = 3;
+    private static int lbPort = 2100;
 
     public static void main(String[] args) throws Exception {
-        servers.add(new ServerInfo("127.0.0.1", 2121));
-        servers.add(new ServerInfo("127.0.0.1", 2122));
-        serverClients.put(servers.get(0), 0);
-        serverClients.put(servers.get(1), 0);
+        loadConfig();
+        if (servers.isEmpty()) {
+            servers.add(new ServerInfo("127.0.0.1", 2121));
+            servers.add(new ServerInfo("127.0.0.1", 2122));
+        }
+        for (ServerInfo s : servers) {
+            serverClients.put(s, 0);
+        }
 
-        ServerSocket lbSocket = new ServerSocket(2100);
-        System.out.println("Load Balancer running on port 2100...");
+        ServerSocket lbSocket = new ServerSocket(lbPort);
+        System.out.println("Load Balancer running on port " + lbPort + "...");
 
         while (true) {
             Socket clientSocket = lbSocket.accept();
@@ -33,10 +43,51 @@ public class LoadBalancer {
 
     private static ServerInfo chooseServer() {
         for (ServerInfo s : servers) {
-            if (serverClients.get(s) < 3)
+            if (serverClients.get(s) < maxClientsPerServer)
                 return s;
         }
         return null;
+    }
+
+    private static void loadConfig() {
+        File configFile = new File("resources/lb_config.json");
+        if (!configFile.exists()) {
+            return;
+        }
+        try (FileReader reader = new FileReader(configFile)) {
+            JSONParser parser = new JSONParser();
+            JSONObject cfg = (JSONObject) parser.parse(reader);
+
+            Object lbPortObj = cfg.get("lb_port");
+            if (lbPortObj != null) {
+                lbPort = Integer.parseInt(lbPortObj.toString());
+            }
+
+            Object maxObj = cfg.get("max_clients_per_server");
+            if (maxObj != null) {
+                maxClientsPerServer = Integer.parseInt(maxObj.toString());
+            }
+
+            Object serversObj = cfg.get("servers");
+            if (serversObj instanceof JSONArray) {
+                servers.clear();
+                JSONArray arr = (JSONArray) serversObj;
+                for (Object o : arr) {
+                    if (!(o instanceof JSONObject)) {
+                        continue;
+                    }
+                    JSONObject s = (JSONObject) o;
+                    Object ipObj = s.get("ip");
+                    Object portObj = s.get("port");
+                    if (ipObj == null || portObj == null) {
+                        continue;
+                    }
+                    servers.add(new ServerInfo(ipObj.toString(), Integer.parseInt(portObj.toString())));
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to load lb_config.json: " + e.getMessage());
+        }
     }
 
     static class ServerInfo {
