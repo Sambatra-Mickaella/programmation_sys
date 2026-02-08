@@ -28,6 +28,7 @@ public class ServeurService {
                 System.out.println("  " + line);
             }
         }
+        String end = in.readLine(); // consume "END"
 
         // String end = in.readLine(); // "END"
     }
