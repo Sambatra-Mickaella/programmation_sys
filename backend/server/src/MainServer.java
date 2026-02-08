@@ -8,6 +8,9 @@ public class MainServer {
             try { port = Integer.parseInt(args[0]); } catch(Exception ignored) {}
         }
         try{
+            NotificationService.setMyPort(port);
+            NotificationService.startListener(port);
+
             ServerSocket serverSocket = new ServerSocket(port);
             FileManager fm = new FileManager();
             System.out.println("Server running on port " + port + "...");

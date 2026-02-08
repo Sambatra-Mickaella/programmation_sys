@@ -8,8 +8,8 @@ public class FileManager {
     private final Map<String, Long> quotas = new HashMap<>();
     private final Map<String, Set<String>> permissions = new HashMap<>(); // plus propre avec Set
 
-    private static final String QUOTAS_PATH   = "server/resources/quotas.json";
-    private static final String PERMS_PATH    = "server/resources/permissions.json";
+    private static final String QUOTAS_PATH   = "resources/quotas.json";
+    private static final String PERMS_PATH    = "resources/permissions.json";
     
     public FileManager() {
         reloadQuotas();

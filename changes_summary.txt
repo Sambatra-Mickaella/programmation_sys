@@ -1,0 +1,47 @@
+Résumé des modifications apportées au projet pour intégrer le load balancer, stockage partagé, et notifications inter-primaires.
+
+1. backend/loadbalancer/src/LoadBalancer.java
+   - Ajout de chargement de config depuis resources/lb_config.json (ports, max clients, liste des serveurs).
+   - Support pour config configurable au lieu de hardcodé.
+
+2. backend/loadbalancer/resources/lb_config.json
+   - Créé avec lb_port: 2100, max_clients_per_server: 3, servers: [127.0.0.1:2121, 2122, 2123].
+
+3. backend/client/src/MainClient.java
+   - Ajout de chargement de config depuis resources/config.json (server_ip, server_port).
+   - Suppression de l'auto-login (prompt toujours pour user/pass).
+
+4. backend/client/src/controller/UserServlet.java
+   - Chargement de config.json depuis classpath pour server_ip/port.
+
+5. backend/client/resources/config.json
+   - server_port changé à 2100 (load balancer).
+
+6. backend/server/src/MainServer.java
+   - Intégration de NotificationService : setMyPort et startListener pour notifications.
+
+7. backend/server/src/ClientThread.java
+   - Chemins corrigés : utilisation de ../shared_storage/users/<username>/ pour upload, list, download.
+   - Appel à NotificationService.broadcastNewFile après upload réussi.
+
+8. backend/server/src/NotificationService.java
+   - Créé : broadcast JSON notifications aux autres primaires sur port +100.
+   - Listener pour recevoir notifications des autres.
+
+9. backend/tools/start_primaries.sh
+   - Ajout de pkill -f MainServer pour tuer les processus existants avant relance.
+   - Compilation automatique si out/ n'existe pas.
+
+10. backend/tools/start_all.sh
+    - Créé : lance primaires, LB, et client de test.
+
+11. backend/shared_storage/users/
+    - Création des répertoires alice, bob, micka pour tests.
+
+12. backend/server/resources/quotas.json et permissions.json
+    - Vérifiés présents pour FileManager.
+
+13. backend/server/resources/user.json
+    - Utilisé pour authentification (users: alice, bob, micka avec pass 1234).
+
+Toutes les modifications visent à rendre le système distribué avec stockage partagé (slave implicite) et notifications temps-réel entre primaires.

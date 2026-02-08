@@ -38,7 +38,7 @@ public class ClientThread implements Runnable {
 
             // Charger users.json
             JSONParser parser = new JSONParser();
-            JSONObject users = (JSONObject) parser.parse(new FileReader("server/resources/user.json"));
+            JSONObject users = (JSONObject) parser.parse(new FileReader("resources/user.json"));
 
             if (!users.containsKey(username) || !users.get(username).equals(password)) {
                 writer.println("ERROR Invalid username or password");
@@ -93,7 +93,7 @@ public class ClientThread implements Runnable {
             return;
         }
 
-        String userDirPath = "shared_storage/users/" + username + "/";
+        String userDirPath = "../shared_storage/users/" + username + "/";
         File userDir = new File(userDirPath);
         if (!userDir.exists() && !userDir.mkdirs()) {
             writer.println("ERROR Cannot create user directory");
@@ -136,6 +136,7 @@ public class ClientThread implements Runnable {
                 fileManager.consumeQuota(username, size);
                 writer.println("OK Upload successful");
                 System.out.println("[UPLOAD] Succès : " + username + " → " + filename + " (" + size + " octets)");
+                NotificationService.broadcastNewFile(username, filename, size);
             }
         } catch (IOException e) {
             System.out.println("[UPLOAD] Erreur : " + e.getMessage());
@@ -151,7 +152,7 @@ public class ClientThread implements Runnable {
         }
 
         String filename = parts[1].trim();
-        String userDirPath = "shared_storage/users/" + username + "/";
+        String userDirPath = "../shared_storage/users/" + username + "/";
         File file = new File(userDirPath + filename);
 
         if (!file.exists() || !file.isFile()) {
@@ -177,7 +178,7 @@ public class ClientThread implements Runnable {
     }
 
     private void handleList(PrintWriter writer) {
-        String userDirPath = "shared_storage/users/" + username + "/";
+        String userDirPath = "../shared_storage/users/" + username + "/";
         File dir = new File(userDirPath);
 
         if (!dir.exists() || !dir.isDirectory()) {
