@@ -112,7 +112,16 @@ public class ServeurService {
             return users;
         }
 
-        int count = Integer.parseInt(countLine.trim());
+        String trimmed = countLine.trim();
+        if (trimmed.startsWith("ERROR")) {
+            throw new IOException("USERS failed: " + trimmed);
+        }
+        int count;
+        try {
+            count = Integer.parseInt(trimmed);
+        } catch (Exception e) {
+            throw new IOException("USERS invalid response: " + trimmed);
+        }
 
         if (count == 0) {
             System.out.println("Aucun utilisateur trouvé");
@@ -127,6 +136,52 @@ public class ServeurService {
             }
         }
         return users;
+    }
+
+    public static List<String> listSharedFiles(BufferedReader in, PrintWriter out, String owner) throws IOException {
+        out.println("LIST_SHARED;" + owner);
+        out.flush();
+
+        List<String> rows = new ArrayList<>();
+        String countLine = in.readLine();
+        if (countLine == null) return rows;
+        int count = 0;
+        try { count = Integer.parseInt(countLine.trim()); } catch (Exception ignored) {}
+        for (int i = 0; i < count; i++) {
+            String line = in.readLine();
+            if (line != null) rows.add(line);
+        }
+        return rows;
+    }
+
+    public static String requestRead(BufferedReader in, PrintWriter out, String owner, String file) throws IOException {
+        out.println("REQUEST_READ;" + owner + ";" + file);
+        out.flush();
+        String resp = in.readLine();
+        return resp == null ? "ERROR" : resp;
+    }
+
+    public static List<String> listIncomingRequests(BufferedReader in, PrintWriter out) throws IOException {
+        out.println("LIST_REQUESTS");
+        out.flush();
+
+        List<String> rows = new ArrayList<>();
+        String countLine = in.readLine();
+        if (countLine == null) return rows;
+        int count = 0;
+        try { count = Integer.parseInt(countLine.trim()); } catch (Exception ignored) {}
+        for (int i = 0; i < count; i++) {
+            String line = in.readLine();
+            if (line != null) rows.add(line);
+        }
+        return rows;
+    }
+
+    public static String respondRequest(BufferedReader in, PrintWriter out, String requester, String file, String action) throws IOException {
+        out.println("RESPOND_REQUEST;" + requester + ";" + file + ";" + action);
+        out.flush();
+        String resp = in.readLine();
+        return resp == null ? "ERROR" : resp;
     }
     
     public static void handleList(BufferedReader in, PrintWriter out) throws IOException {

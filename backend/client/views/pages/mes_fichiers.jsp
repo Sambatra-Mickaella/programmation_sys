@@ -353,6 +353,7 @@
                     <div class="row g-3">
                         <% if (list_file != null && !list_file.isEmpty()) { 
                             for (String file : list_file) { 
+                                String fileEncoded = java.net.URLEncoder.encode(file, "UTF-8");
                                 // Déterminer l'icône selon l'extension
                                 String icon = "bi-file-earmark";
                                 String iconColor = "text-secondary";
@@ -395,11 +396,11 @@
                                             </h6>
                                             <!-- Boutons d'action -->
                                             <div class="mt-auto d-flex gap-2">
-                                                <a href="<%= request.getContextPath() %>/show/view?file=<%= file %>" 
+                                                <a href="<%= request.getContextPath() %>/show/view?file=<%= fileEncoded %>" 
                                                    class="btn btn-primary btn-sm flex-grow-1">
                                                     <i class="bi bi-eye me-1"></i>Voir
                                                 </a>
-                                                <a href="<%= request.getContextPath() %>/show/download?file=<%= file %>" 
+                                                <a href="<%= request.getContextPath() %>/show/download?file=<%= fileEncoded %>" 
                                                    class="btn btn-outline-primary btn-sm">
                                                     <i class="bi bi-download"></i>
                                                 </a>

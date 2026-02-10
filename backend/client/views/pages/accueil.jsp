@@ -351,12 +351,15 @@
                 <section>
                     <div class="row g-3">
                         <% if (list_users != null) { 
-                            for (String users : list_users) { %>
+                            for (String users : list_users) { 
+                                if (users == null) continue;
+                                String ownerUrl = request.getContextPath() + "/show/partages_fichiers?owner=" + java.net.URLEncoder.encode(users, "UTF-8");
+                        %>
                                 <div class="col-12 col-sm-6 col-lg-4">
                                     <div class="card shadow-sm">
                                         <div class="card-body">
                                             <h5 class="card-title text-primary"><%= users %></h5>
-                                            <a href="#" class="btn btn-outline-primary btn-sm">Voir</a>
+                                            <a href="<%= ownerUrl %>" class="btn btn-outline-primary btn-sm">Voir</a>
                                         </div>
                                     </div>
                                 </div>
