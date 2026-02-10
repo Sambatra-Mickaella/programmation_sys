@@ -9,8 +9,180 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ServeurService {
+
+    public static List<String> showhandleList(BufferedReader in, PrintWriter out) throws IOException {
+        out.println("LIST");
+        out.flush();
+
+        List<String> list = new ArrayList<>();
+
+        String countLine = in.readLine();
+        int count = Integer.parseInt(countLine.trim());
+
+        if (count == 0) {
+            System.out.println("Aucun fichier");
+        } else {
+            System.out.println("Fichiers (" + count + ") :");
+            for (int i = 0; i < count; i++) {
+                String line = in.readLine();
+                list.add(line);
+            }
+        }
+        return list;
+    }
+
+    public static List<String> showNomDossier(List<String> list) {
+        List<String> nom_dossier = new ArrayList<>();
+        for(int i =0; i<list.size(); i++) {
+            String line = list.get(i);
+            String[] parts = line.split(";");
+            if(parts.length == 2) {
+                nom_dossier.add(parts[0].trim());
+            }
+        }
+        return nom_dossier;
+    }
+
+    public static int getStockageUtiliser(List<String> list) {
+        int total = 0;
+        for(int i=0; i<list.size(); i++) {
+            String line = list.get(i);
+            String[] parts = line.split(";");
+            if(parts.length == 2) {
+                try {
+                    total += Integer.parseInt(parts[1].trim());
+                } catch (NumberFormatException e) {
+                    System.out.println("Format de stockage invalide: " + parts[1]);
+                }
+            }
+        }
+        return total;
+    }
+
+    public static long getQuotaUser(BufferedReader in, PrintWriter out) throws IOException {
+        out.println("QUOTA");
+        out.flush();
+
+        String response = in.readLine();
+        if (response == null || response.startsWith("ERROR")) {
+            System.out.println("Erreur lors de la récupération du quota: " + response);
+            return -1;
+        }
+
+        try {
+            long quota = Long.parseLong(response.trim());
+            System.out.println("Quota utilisateur: " + formatSize(quota));
+            return quota;
+        } catch (NumberFormatException e) {
+            System.out.println("Format de quota invalide: " + response);
+            return -1;
+        }
+    }
+
+    public static int getStoragePercentage(long used, long quota) {
+        if (quota <= 0) return 0;
+        return (int) Math.min(100, (used * 100) / quota);
+    }
+
+    public static String formatSize(long bytes) {
+        if (bytes < 1024) {
+            return bytes + " o";
+        } else if (bytes < 1024 * 1024) {
+            return String.format("%.1f Ko", bytes / 1024.0);
+        } else if (bytes < 1024 * 1024 * 1024) {
+            return String.format("%.1f Mo", bytes / (1024.0 * 1024));
+        } else {
+            return String.format("%.2f Go", bytes / (1024.0 * 1024 * 1024));
+        }
+    }
+
+    public static List<String> showhandleListUsers(BufferedReader in, PrintWriter out) throws IOException {
+        out.println("USERS");
+        out.flush();
+
+        List<String> users = new ArrayList<>();
+
+        String countLine = in.readLine();
+        if (countLine == null) {
+            System.out.println("Aucune réponse du serveur");
+            return users;
+        }
+
+        String trimmed = countLine.trim();
+        if (trimmed.startsWith("ERROR")) {
+            throw new IOException("USERS failed: " + trimmed);
+        }
+        int count;
+        try {
+            count = Integer.parseInt(trimmed);
+        } catch (Exception e) {
+            throw new IOException("USERS invalid response: " + trimmed);
+        }
+
+        if (count == 0) {
+            System.out.println("Aucun utilisateur trouvé");
+        } else {
+            System.out.println("Utilisateurs (" + count + ") :");
+            for (int i = 0; i < count; i++) {
+                String line = in.readLine();
+                if (line != null) {
+                    users.add(line);
+                    System.out.println("  " + line);
+                }
+            }
+        }
+        return users;
+    }
+
+    public static List<String> listSharedFiles(BufferedReader in, PrintWriter out, String owner) throws IOException {
+        out.println("LIST_SHARED;" + owner);
+        out.flush();
+
+        List<String> rows = new ArrayList<>();
+        String countLine = in.readLine();
+        if (countLine == null) return rows;
+        int count = 0;
+        try { count = Integer.parseInt(countLine.trim()); } catch (Exception ignored) {}
+        for (int i = 0; i < count; i++) {
+            String line = in.readLine();
+            if (line != null) rows.add(line);
+        }
+        return rows;
+    }
+
+    public static String requestRead(BufferedReader in, PrintWriter out, String owner, String file) throws IOException {
+        out.println("REQUEST_READ;" + owner + ";" + file);
+        out.flush();
+        String resp = in.readLine();
+        return resp == null ? "ERROR" : resp;
+    }
+
+    public static List<String> listIncomingRequests(BufferedReader in, PrintWriter out) throws IOException {
+        out.println("LIST_REQUESTS");
+        out.flush();
+
+        List<String> rows = new ArrayList<>();
+        String countLine = in.readLine();
+        if (countLine == null) return rows;
+        int count = 0;
+        try { count = Integer.parseInt(countLine.trim()); } catch (Exception ignored) {}
+        for (int i = 0; i < count; i++) {
+            String line = in.readLine();
+            if (line != null) rows.add(line);
+        }
+        return rows;
+    }
+
+    public static String respondRequest(BufferedReader in, PrintWriter out, String requester, String file, String action) throws IOException {
+        out.println("RESPOND_REQUEST;" + requester + ";" + file + ";" + action);
+        out.flush();
+        String resp = in.readLine();
+        return resp == null ? "ERROR" : resp;
+    }
     
     public static void handleList(BufferedReader in, PrintWriter out) throws IOException {
         out.println("LIST");

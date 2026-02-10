@@ -15,7 +15,7 @@ public class FileManager {
         reloadQuotas();
         reloadPermissions();
     }
-        public synchronized Long getQuota(String user) {
+    public synchronized Long getQuota(String user) {
         return quotas.get(user);
     }
     

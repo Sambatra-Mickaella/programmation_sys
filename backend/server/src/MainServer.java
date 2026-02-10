@@ -13,8 +13,12 @@ public class MainServer {
 
             ServerSocket serverSocket = new ServerSocket(port);
             FileManager fm = new FileManager();
+<<<<<<< HEAD
             System.out.println("Server running on port " + port + "...");
 
+=======
+            System.out.println("Server running on port 2121...");
+>>>>>>> file-list-views
             while(true){
                 Socket client = serverSocket.accept();
                 new Thread(new ClientThread(client,fm)).start();

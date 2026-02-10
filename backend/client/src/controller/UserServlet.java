@@ -97,8 +97,15 @@ public class UserServlet extends HttpServlet {
         // Connexion réussie : stocker l'utilisateur en session
         HttpSession session = req.getSession();
         session.setAttribute("user", u);
+        
+        // Configuration du timeout de session
+        // Timeout en secondes (1800 = 30 minutes)
+        session.setMaxInactiveInterval(1800);
+        
+        // Alternative : logout automatique après 1 heure
+        // session.setMaxInactiveInterval(3600);
 
-        res.sendRedirect(req.getContextPath() + "/show/list");
+        res.sendRedirect(req.getContextPath() + "/show/mes_fichiers");
     }
 
 }

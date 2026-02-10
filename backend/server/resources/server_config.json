@@ -1,0 +1,6 @@
+{
+  "storage_root": "shared_storage",
+  "slave_host": "127.0.0.1",
+  "slave_port": 2222,
+  "slave_storage_root": "slave_storage"
+}

@@ -15,28 +15,28 @@
     <script src="../assets/bootstrap/js/bootstrap.bundle.min.js"></script>
     <title>SmartDrive</title>
 </head>
-<body class="bg-secondary">
+<body class="bg-dark">
 
-    <div class="container-fluid" style="padding: 10%;">
-        <div class="container shadow p-5 rounded-5 bg-body-tertiary" style="width: 50%; height: auto;">
+    <div class="container-fluid" style="padding: 10%; min-height: 100vh; display: flex; align-items: center; justify-content: center;">
+        <div class="container shadow p-5 rounded-5 bg-dark border border-primary" style="width: 50%; height: auto;">
 
             <%-- // ================== Header ================= // --%>
             <div class="text-center">
-                <h1 class="mb-4">Welcome to <span class="text-primary fw-bold">SmartDrive</span></h1>
+                <h1 class="mb-4 text-white">Welcome to <span class="text-primary fw-bold">SmartDrive</span></h1>
             </div>
 
             <%-- // ================== Login Form ================= // --%>
             <form action="/SmartDrive/user" method="post">
                 <div class="mb-4">
-                    <label class="form-label" for="nom"> Nom :</label>
-                    <input class="form-control" type="text" name="nom" id="nom" placeholder="Votre nom ..." required>
+                    <label class="form-label text-white" for="nom"> Nom :</label>
+                    <input class="form-control border-primary bg-dark text-white" type="text" name="nom" id="nom" placeholder="Votre nom ..." required>
                 </div>
                 <div class="mb-4">
-                    <label class="form-label" for="mdp"> Mot de passe :</label>
-                    <input class="form-control" type="password" name="password" id="mdp" placeholder="Mot de Passe" required>
+                    <label class="form-label text-white" for="mdp"> Mot de passe :</label>
+                    <input class="form-control border-primary bg-dark text-white" type="password" name="password" id="mdp" placeholder="Mot de Passe" required>
                 </div>
                 <div class="text-center">
-                    <input class="btn btn-primary" type="submit" value="Connexion">
+                    <input class="btn btn-primary fw-bold" type="submit" value="Connexion">
                 </div>
             </form> 
 

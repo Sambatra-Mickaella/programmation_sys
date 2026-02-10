@@ -6,7 +6,7 @@ SRC_DIR="src"
 WEB_DIR="views"
 BUILD_DIR="build"
 LIB_DIR="lib"
-TOMCAT_WEBAPPS="/home/bryano-yvan/Documents/tomcat_10/webapps"
+TOMCAT_WEBAPPS="/opt/tomcat/webapps"
 SERVLET_API_JAR="$LIB_DIR/servlet-api.jar"
 
 # Nettoyage et création du répertoire temporaire
@@ -22,7 +22,6 @@ javac -cp ".:lib/*" -d $BUILD_DIR/WEB-INF/classes @sources.txt
 rm sources.txt
 
 # Copier les fichiers web (web.xml, JSP, etc.)
-cp -r $WEB_DIR/*.jsp $BUILD_DIR/
 cp -r $WEB_DIR/pages/* $BUILD_DIR/pages/
 cp -r $WEB_DIR/assets/* $BUILD_DIR/assets/
 cp -r $WEB_DIR/*.xml $BUILD_DIR/WEB-INF/
@@ -39,6 +38,9 @@ cd ..
 cp -f $BUILD_DIR/$APP_NAME.war $TOMCAT_WEBAPPS/
 
 echo ""
+echo "🔁 Redémarrage de Tomcat..."
+$STARTUP
+sleep 10
 
 echo "Déploiement terminé. Redémarrez Tomcat si nécessaire."
 
