@@ -22,7 +22,6 @@ javac -cp ".:lib/*" -d $BUILD_DIR/WEB-INF/classes @sources.txt
 rm sources.txt
 
 # Copier les fichiers web (web.xml, JSP, etc.)
-cp -r $WEB_DIR/*.jsp $BUILD_DIR/
 cp -r $WEB_DIR/pages/* $BUILD_DIR/pages/
 cp -r $WEB_DIR/assets/* $BUILD_DIR/assets/
 cp -r $WEB_DIR/*.xml $BUILD_DIR/WEB-INF/
