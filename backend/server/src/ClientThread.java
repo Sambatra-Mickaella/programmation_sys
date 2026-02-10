@@ -84,9 +84,6 @@ public class ClientThread implements Runnable {
                 else if (line.startsWith("DOWNLOAD;")) {
                     handleDownload(line, writer);
                 }
-                else if (line.startsWith("DOWNLOAD_AS;")) {
-                    handleDownloadAs(line, writer);
-                }
                 else if (line.equals("LIST")) {
                     handleList(writer);
                 }
