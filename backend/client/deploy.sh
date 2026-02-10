@@ -8,6 +8,7 @@ BUILD_DIR="build"
 LIB_DIR="lib"
 TOMCAT_WEBAPPS="/opt/tomcat/webapps"
 SERVLET_API_JAR="$LIB_DIR/servlet-api.jar"
+JSON_SIMPLE_JAR="$LIB_DIR/json-simple-1.1.1.jar"
 
 # Nettoyage et création du répertoire temporaire
 rm -rf $BUILD_DIR
@@ -26,8 +27,17 @@ cp -r $WEB_DIR/pages/* $BUILD_DIR/pages/
 cp -r $WEB_DIR/assets/* $BUILD_DIR/assets/
 cp -r $WEB_DIR/*.xml $BUILD_DIR/WEB-INF/
 
+# Copier les resources (config.json, etc.) dans le classpath webapp
+if [ -d "resources" ]; then
+  cp -r resources/* $BUILD_DIR/WEB-INF/classes/
+fi
+
 # Copier les fichiers (.jar) dans WEB-INF/lib
-cp -r $SERVLET_API_JAR $BUILD_DIR/WEB-INF/lib/
+# Ne pas packager servlet-api.jar dans le WAR (fourni par Tomcat).
+# Packager les dépendances runtime nécessaires.
+if [ -f "$JSON_SIMPLE_JAR" ]; then
+  cp -r "$JSON_SIMPLE_JAR" "$BUILD_DIR/WEB-INF/lib/"
+fi
 
 # Générer le fichier .war dans le dossier build
 cd $BUILD_DIR || exit

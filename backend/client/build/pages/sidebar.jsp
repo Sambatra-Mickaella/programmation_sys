@@ -18,10 +18,10 @@
         <div class="user-email"><%= user.getNom() %>@example.com</div>
     </div>
     <nav class="nav flex-column">
-        <a class="nav-link <%= accueilActive %>" href="/SmartDrive/show/accueil"><i class="bi bi-house-door-fill"></i>Accueil</a>
-        <a class="nav-link <%= fichiersActive %>" href="/SmartDrive/show/mes_fichiers"><i class="bi bi-folder-fill"></i>Mes fichiers</a>
-        <a class="nav-link <%= partagesActive %>" href="/SmartDrive/show/partages"><i class="bi bi-share-fill"></i>Partages</a>
-        <a class="nav-link <%= stockageActive %>" href="/SmartDrive/show/stockage"><i class="bi bi-hdd-fill"></i>Stockage</a>
+        <a class="nav-link <%= accueilActive %>" href="<%= request.getContextPath() %>/show/accueil"><i class="bi bi-house-door-fill"></i>Accueil</a>
+        <a class="nav-link <%= fichiersActive %>" href="<%= request.getContextPath() %>/show/mes_fichiers"><i class="bi bi-folder-fill"></i>Mes fichiers</a>
+        <a class="nav-link <%= partagesActive %>" href="<%= request.getContextPath() %>/show/partages"><i class="bi bi-share-fill"></i>Partages</a>
+        <a class="nav-link <%= stockageActive %>" href="<%= request.getContextPath() %>/show/stockage"><i class="bi bi-hdd-fill"></i>Stockage</a>
         <a class="nav-link <%= parametresActive %>" href="#"><i class="bi bi-gear-fill"></i>Parametres</a>
     </nav>
     <div class="mt-auto pt-3 border-top" style="border-top-color: var(--border-color) !important;">
@@ -39,10 +39,10 @@
     </div>
     <div class="offcanvas-body d-flex flex-column">
         <nav class="nav flex-column">
-            <a class="nav-link <%= accueilActive %>" href="/SmartDrive/show/accueil"><i class="bi bi-house-door-fill me-2"></i>Accueil</a>
-            <a class="nav-link <%= fichiersActive %>" href="/SmartDrive/show/mes_fichiers"><i class="bi bi-folder-fill me-2"></i>Mes fichiers</a>
-            <a class="nav-link <%= partagesActive %>" href="/SmartDrive/show/partages"><i class="bi bi-share-fill me-2"></i>Partages</a>
-            <a class="nav-link <%= stockageActive %>" href="/SmartDrive/show/stockage"><i class="bi bi-hdd-fill me-2"></i>Stockage</a>
+            <a class="nav-link <%= accueilActive %>" href="<%= request.getContextPath() %>/show/accueil"><i class="bi bi-house-door-fill me-2"></i>Accueil</a>
+            <a class="nav-link <%= fichiersActive %>" href="<%= request.getContextPath() %>/show/mes_fichiers"><i class="bi bi-folder-fill me-2"></i>Mes fichiers</a>
+            <a class="nav-link <%= partagesActive %>" href="<%= request.getContextPath() %>/show/partages"><i class="bi bi-share-fill me-2"></i>Partages</a>
+            <a class="nav-link <%= stockageActive %>" href="<%= request.getContextPath() %>/show/stockage"><i class="bi bi-hdd-fill me-2"></i>Stockage</a>
             <a class="nav-link <%= parametresActive %>" href="#"><i class="bi bi-gear-fill me-2"></i>Parametres</a>
         </nav>
         <div class="mt-auto pt-3 border-top" style="border-top-color: var(--border-color) !important;">

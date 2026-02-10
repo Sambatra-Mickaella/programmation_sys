@@ -2,6 +2,9 @@ import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.json.simple.*;
 import org.json.simple.parser.JSONParser;
 
@@ -9,6 +12,37 @@ public class ClientThread implements Runnable {
     private final Socket socket;
     private final FileManager fileManager;
     private String username;
+
+    private static Path resolveUsersJsonPath() {
+        String override = System.getProperty("smartdrive.usersPath");
+        if (override == null || override.trim().isEmpty()) {
+            override = System.getenv("SMARTDRIVE_USERS_PATH");
+        }
+        if (override != null && !override.trim().isEmpty()) {
+            Path p = Paths.get(override.trim());
+            if (Files.isDirectory(p)) {
+                p = p.resolve("user.json");
+            }
+            if (Files.exists(p)) {
+                return p.toAbsolutePath().normalize();
+            }
+        }
+
+        Path cwd = Paths.get(System.getProperty("user.dir"));
+        Path[] candidates = new Path[] {
+                cwd.resolve("resources").resolve("user.json"),
+                cwd.resolve("server").resolve("resources").resolve("user.json"),
+                cwd.resolve("backend").resolve("server").resolve("resources").resolve("user.json"),
+                cwd.resolve("..").resolve("server").resolve("resources").resolve("user.json"),
+                cwd.resolve("..").resolve("backend").resolve("server").resolve("resources").resolve("user.json")
+        };
+        for (Path c : candidates) {
+            if (Files.exists(c)) {
+                return c.toAbsolutePath().normalize();
+            }
+        }
+        return cwd.resolve("resources").resolve("user.json").toAbsolutePath().normalize();
+    }
 
     private static File findSharedStorageRoot() {
         // Le repo a `backend/shared_storage/` mais le serveur peut être lancé depuis différents dossiers.
@@ -31,6 +65,10 @@ public class ClientThread implements Runnable {
 
     private static File usersRootDir() {
         return new File(findSharedStorageRoot(), "users");
+    }
+
+    private static File userDir(String username) {
+        return new File(usersRootDir(), username);
     }
 
     public ClientThread(Socket s, FileManager fm) {
@@ -61,9 +99,10 @@ public class ClientThread implements Runnable {
             username = parts[1].trim();
             String password = parts[2].trim();
 
-            // Charger users.json
+            // Charger users.json (chemin robuste)
+            Path usersJson = resolveUsersJsonPath();
             JSONParser parser = new JSONParser();
-            JSONObject users = (JSONObject) parser.parse(new FileReader("resources/user.json"));
+            JSONObject users = (JSONObject) parser.parse(new FileReader(usersJson.toFile()));
 
             if (!users.containsKey(username) || !users.get(username).equals(password)) {
                 writer.println("ERROR Invalid username or password");
@@ -136,8 +175,7 @@ public class ClientThread implements Runnable {
             return;
         }
 
-        String userDirPath = "../shared_storage/users/" + username + "/";
-        File userDir = new File(userDirPath);
+        File userDir = userDir(username);
         if (!userDir.exists() && !userDir.mkdirs()) {
             writer.println("ERROR Cannot create user directory");
             return;
@@ -195,8 +233,7 @@ public class ClientThread implements Runnable {
         }
 
         String filename = parts[1].trim();
-        String userDirPath = "../shared_storage/users/" + username + "/";
-        File file = new File(userDirPath + filename);
+        File file = new File(userDir(username), filename);
 
         if (!file.exists() || !file.isFile()) {
             writer.println("ERROR File not found");
@@ -221,8 +258,7 @@ public class ClientThread implements Runnable {
     }
 
     private void handleList(PrintWriter writer) {
-        String userDirPath = "../shared_storage/users/" + username + "/";
-        File dir = new File(userDirPath);
+        File dir = userDir(username);
 
         if (!dir.exists() || !dir.isDirectory()) {
             writer.println("0");

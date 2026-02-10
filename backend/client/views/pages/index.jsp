@@ -1,3 +1,3 @@
 <%
-    response.sendRedirect("home.jsp");
+    response.sendRedirect("pages/home.jsp");
 %>

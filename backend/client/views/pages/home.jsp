@@ -26,7 +26,7 @@
             </div>
 
             <%-- // ================== Login Form ================= // --%>
-            <form action="/SmartDrive/user" method="post">
+            <form action="<%= request.getContextPath() %>/user" method="post">
                 <div class="mb-4">
                     <label class="form-label text-white" for="nom"> Nom :</label>
                     <input class="form-control border-primary bg-dark text-white" type="text" name="nom" id="nom" placeholder="Votre nom ..." required>

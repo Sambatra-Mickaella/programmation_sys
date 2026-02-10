@@ -1,6 +1,9 @@
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -49,9 +52,32 @@ public class LoadBalancer {
         return null;
     }
 
+    private static File resolveConfigFile() {
+        String override = System.getProperty("smartdrive.lbConfig");
+        if (override == null || override.trim().isEmpty()) {
+            override = System.getenv("SMARTDRIVE_LB_CONFIG");
+        }
+        if (override != null && !override.trim().isEmpty()) {
+            Path p = Paths.get(override.trim());
+            if (Files.exists(p)) return p.toFile();
+        }
+
+        Path cwd = Paths.get(System.getProperty("user.dir"));
+        Path[] candidates = new Path[] {
+                cwd.resolve("resources").resolve("lb_config.json"),
+                cwd.resolve("loadbalancer").resolve("resources").resolve("lb_config.json"),
+                cwd.resolve("backend").resolve("loadbalancer").resolve("resources").resolve("lb_config.json"),
+                cwd.resolve("..").resolve("loadbalancer").resolve("resources").resolve("lb_config.json")
+        };
+        for (Path c : candidates) {
+            if (Files.exists(c)) return c.toFile();
+        }
+        return null;
+    }
+
     private static void loadConfig() {
-        File configFile = new File("resources/lb_config.json");
-        if (!configFile.exists()) {
+        File configFile = resolveConfigFile();
+        if (configFile == null || !configFile.exists()) {
             return;
         }
         try (FileReader reader = new FileReader(configFile)) {
