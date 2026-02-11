@@ -1,0 +1,7 @@
+compilation et exec:
+via server:
+javac -cp "lib/json-simple-1.1.1.jar:server/src:client /src" server/src/*.java client\ /src/*.java
+java -cp "lib/json-simple-1.1.1.jar:server/src" MainServer
+
+via client:
+java -cp "lib/json-simple-1.1.1.jar:server/src" MainServer

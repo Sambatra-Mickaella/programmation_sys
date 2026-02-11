@@ -123,6 +123,9 @@ public class ClientThread implements Runnable {
                 else if (line.startsWith("DOWNLOAD;")) {
                     handleDownload(line, writer);
                 }
+                else if (line.startsWith("DOWNLOAD_AS;")) {
+                    handleDownloadAs(line, writer);
+                }
                 else if (line.equals("LIST")) {
                     handleList(writer);
                 }
@@ -235,6 +238,49 @@ public class ClientThread implements Runnable {
         String filename = parts[1].trim();
         File file = new File(userDir(username), filename);
 
+        if (!file.exists() || !file.isFile()) {
+            writer.println("ERROR File not found");
+            return;
+        }
+
+        long size = file.length();
+        writer.println("FILE;" + size);
+        writer.flush();
+
+        try (FileInputStream fis = new FileInputStream(file)) {
+            OutputStream os = socket.getOutputStream();
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = fis.read(buffer)) != -1) {
+                os.write(buffer, 0, read);
+            }
+            os.flush();
+        } catch (IOException e) {
+            writer.println("ERROR Download failed");
+        }
+    }
+
+    private void handleDownloadAs(String line, PrintWriter writer) throws IOException {
+        String[] parts = line.split(";", 3);
+        if (parts.length != 3) {
+            writer.println("ERROR Invalid DOWNLOAD_AS format");
+            return;
+        }
+
+        String owner = parts[1].trim();
+        String filename = parts[2].trim();
+        if (owner.isEmpty() || filename.isEmpty() || filename.contains("..") || filename.contains("/") || filename.contains("\\")) {
+            writer.println("ERROR Invalid params");
+            return;
+        }
+
+        String status = ShareRequestManager.getStatus(owner, username, filename);
+        if (!"approved".equalsIgnoreCase(status)) {
+            writer.println("ERROR Not approved");
+            return;
+        }
+
+        File file = new File(userDir(owner), filename);
         if (!file.exists() || !file.isFile()) {
             writer.println("ERROR File not found");
             return;

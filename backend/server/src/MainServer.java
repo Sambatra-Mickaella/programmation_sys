@@ -3,7 +3,7 @@ import java.net.Socket;
 
 public class MainServer {
     public static void main(String[] args) {
-        int port = 2121;
+        int port = 2122;
         if (args.length > 0) {
             try { port = Integer.parseInt(args[0]); } catch(Exception ignored) {}
         }

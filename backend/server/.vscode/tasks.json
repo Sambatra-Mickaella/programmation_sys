@@ -4,18 +4,7 @@
 		{
 			"label": "Compile Java Server",
 			"type": "shell",
-			"command": "javac -d bin src/*.java",
-			"args": [],
-			"problemMatcher": [
-				"$javac"
-			],
-			"group": "build"
-		},
-		{
-			"label": "Compile Java Server",
-			"type": "shell",
-			"command": "javac -d bin src/*.java",
-			"args": [],
+			"command": "javac -cp \"lib/json-simple-1.1.1.jar\" -d out src/*.java",
 			"problemMatcher": [
 				"$javac"
 			],

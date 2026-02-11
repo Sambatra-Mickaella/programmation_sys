@@ -3,53 +3,76 @@ import java.net.Socket;
 import java.util.Scanner;
 
 public class MainClient {
+
     public static void main(String[] args) {
         try (
-            Socket socket = new Socket("127.0.0.1", 2100); // Connexion au LoadBalancer
+            Socket socket = new Socket("127.0.0.1", 2100);
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
             Scanner sc = new Scanner(System.in)
         ) {
-            // Login
+            System.out.println("[Client] Connecté au load balancer sur port 2100");
+
+            // === Phase de login ===
             System.out.print("Username: ");
             String username = sc.nextLine().trim();
+
             System.out.print("Password: ");
             String password = sc.nextLine().trim();
 
-            out.println("LOGIN;" + username + ";" + password);
+            String loginCommand = "LOGIN;" + username + ";" + password;
+            System.out.println("[DEBUG] Envoi login : " + loginCommand);
+
+            out.println(loginCommand);
             out.flush();
 
-            String response = in.readLine();
-            System.out.println("Server: " + response);
+            System.out.println("[DEBUG] Attente de la réponse du serveur...");
 
-            if (response == null || !response.startsWith("Welcome")) {
-                System.out.println("Échec de connexion");
+            String response = in.readLine();
+            if (response == null) {
+                System.out.println("Le serveur a fermé la connexion sans répondre");
                 return;
             }
 
-            // Boucle de commandes
+            System.out.println("Server: " + response);
+
+            if (!response.startsWith("Welcome")) {
+                System.out.println("Échec de connexion - " + response);
+                return;
+            }
+
+            System.out.println("Connexion réussie ! Bienvenue " + username);
+
+            // === Boucle de commandes ===
             while (true) {
-                System.out.print("\nCommand (list / upload <fichier> / download <nom> / exit) : ");
+                System.out.print("\nCommande (list / upload <fichier> / download <nom> / quota / exit) : ");
                 String input = sc.nextLine().trim();
 
                 if (input.isEmpty()) continue;
-                if (input.equalsIgnoreCase("exit")) break;
+
+                if (input.equalsIgnoreCase("exit")) {
+                    System.out.println("Déconnexion...");
+                    break;
+                }
 
                 if (input.equalsIgnoreCase("list")) {
                     handleList(in, out);
-                }
-                else if (input.toLowerCase().startsWith("upload ")) {
+                } else if (input.toLowerCase().startsWith("upload ")) {
                     handleUpload(input, in, out, socket);
-                }
-                else if (input.toLowerCase().startsWith("download ")) {
+                } else if (input.toLowerCase().startsWith("download ")) {
                     handleDownload(input, in, out, socket);
-                }
-                else {
-                    System.out.println("Commande inconnue");
+                } else if (input.equalsIgnoreCase("quota")) {
+                    handleQuota(in, out);
+                } else {
+                    System.out.println("Commande inconnue. Essayez : list, upload <fichier>, download <nom>, quota, exit");
                 }
             }
 
+        } catch (IOException e) {
+            System.err.println("Erreur de connexion ou d'I/O : " + e.getMessage());
+            e.printStackTrace();
         } catch (Exception e) {
+            System.err.println("Erreur inattendue : " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -59,19 +82,30 @@ public class MainClient {
         out.flush();
 
         String countLine = in.readLine();
-        int count = Integer.parseInt(countLine.trim());
+        if (countLine == null) return;
+
+        int count;
+        try {
+            count = Integer.parseInt(countLine.trim());
+        } catch (NumberFormatException e) {
+            System.out.println("Réponse invalide du serveur pour LIST");
+            return;
+        }
 
         if (count == 0) {
-            System.out.println("Aucun fichier");
+            System.out.println("Aucun fichier dans votre espace.");
         } else {
-            System.out.println("Fichiers (" + count + ") :");
+            System.out.println("Vos fichiers (" + count + ") :");
             for (int i = 0; i < count; i++) {
                 String line = in.readLine();
-                System.out.println("  " + line);
+                if (line != null) {
+                    System.out.println("  " + line);
+                }
             }
         }
 
-        String end = in.readLine(); // "END"
+        // Consomme "END"
+        in.readLine();
     }
 
     private static void handleUpload(String input, BufferedReader in, PrintWriter out, Socket socket) throws IOException {
@@ -83,7 +117,7 @@ public class MainClient {
 
         File file = new File(parts[1]);
         if (!file.exists() || !file.isFile()) {
-            System.out.println("Fichier introuvable : " + file);
+            System.out.println("Fichier introuvable : " + file.getAbsolutePath());
             return;
         }
 
@@ -97,6 +131,7 @@ public class MainClient {
         System.out.println("Server: " + response);
 
         if (!"READY".equalsIgnoreCase(response.trim())) {
+            System.out.println("Le serveur n'est pas prêt pour l'upload");
             return;
         }
 
@@ -128,18 +163,22 @@ public class MainClient {
         out.flush();
 
         String header = in.readLine();
+        if (header == null) {
+            System.out.println("Connexion fermée par le serveur");
+            return;
+        }
+
         if (header.startsWith("ERROR")) {
             System.out.println("Erreur : " + header);
             return;
         }
 
         if (!header.startsWith("FILE;")) {
-            System.out.println("Protocole invalide : " + header);
+            System.out.println("Réponse inattendue du serveur : " + header);
             return;
         }
 
         long size = Long.parseLong(header.split(";", 2)[1].trim());
-
         System.out.println("Téléchargement : " + filename + " (" + size + " octets)");
 
         String saveName = "downloaded_" + filename;
@@ -148,17 +187,25 @@ public class MainClient {
             byte[] buffer = new byte[8192];
             long remaining = size;
             int read;
-
             while (remaining > 0) {
                 read = is.read(buffer, 0, (int) Math.min(buffer.length, remaining));
                 if (read == -1) break;
                 fos.write(buffer, 0, read);
                 remaining -= read;
             }
-
             System.out.println("Téléchargement terminé → " + saveName);
-        } catch (Exception e) {
-            System.out.println("Erreur pendant le téléchargement : " + e.getMessage());
+        }
+    }
+
+    private static void handleQuota(BufferedReader in, PrintWriter out) throws IOException {
+        out.println("QUOTA");
+        out.flush();
+
+        String response = in.readLine();
+        if (response != null) {
+            System.out.println("Quota restant : " + response + " octets");
+        } else {
+            System.out.println("Pas de réponse pour QUOTA");
         }
     }
 }

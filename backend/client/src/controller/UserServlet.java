@@ -82,8 +82,32 @@ public class UserServlet extends HttpServlet {
 
         String response = in.readLine();
 
-        if (response == null || !response.startsWith("Welcome")) {
-            System.out.println("Échec de connexion pour: " + username);
+        if (response == null) {
+            System.out.println("Connexion perdue (aucune réponse du backend) pour: " + username);
+            try {
+                serveur.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            req.setAttribute("error", "Connexion au serveur interrompue. Vérifiez que le load balancer et les serveurs backend sont bien démarrés.");
+            req.getRequestDispatcher("/pages/home.jsp").forward(req, res);
+            return;
+        }
+
+        if (response.startsWith("All servers busy")) {
+            System.out.println("Backend occupé/indisponible pour: " + username + " | resp=" + response);
+            try {
+                serveur.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            req.setAttribute("error", response);
+            req.getRequestDispatcher("/pages/home.jsp").forward(req, res);
+            return;
+        }
+
+        if (!response.startsWith("Welcome")) {
+            System.out.println("Échec de connexion pour: " + username + " | resp=" + response);
             try {
                 serveur.close();
             } catch (Exception e) {

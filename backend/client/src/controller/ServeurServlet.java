@@ -199,7 +199,17 @@ public class ServeurServlet extends HttpServlet {
                     return;
                 }
                 if (header.startsWith("ERROR")) {
-                    String msg = URLEncoder.encode("Accès non approuvé. Envoyez une demande de lecture.", "UTF-8");
+                    String lower = header.toLowerCase();
+                    String msgText;
+                    if (lower.contains("not approved") || lower.contains("non approuv")) {
+                        msgText = "Accès non approuvé. Envoyez une demande de lecture.";
+                    } else if (lower.contains("file not found") || lower.contains("introuvable")) {
+                        msgText = "Fichier introuvable.";
+                    } else {
+                        String err = header.substring("ERROR".length()).trim();
+                        msgText = err.isEmpty() ? "Erreur lors de l'accès au fichier." : ("Erreur: " + err);
+                    }
+                    String msg = URLEncoder.encode(msgText, "UTF-8");
                     res.sendRedirect(req.getContextPath() + "/show/partages_fichiers?owner=" + URLEncoder.encode(owner, "UTF-8") + "&message=" + msg);
                     return;
                 }

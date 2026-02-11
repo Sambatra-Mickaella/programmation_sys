@@ -1,9 +1,0 @@
-compilation et exec:
-cd backend
-via server:
-javac -d classes -cp "lib/json-simple-1.1.1.jar:server/src:client/src" server/src/*.java client/src/*.java
-java -cp "lib/json-simple-1.1.1.jar:classes" MainServer
-
-via client:
-javac -cp "lib/json-simple-1.1.1.jar:server/src:client/src" server/src/*.java client/src/*.java
-java -cp "lib/json-simple-1.1.1.jar:classes" MainClient
