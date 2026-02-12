@@ -4,6 +4,23 @@ xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j
 version="2.4">
     <display-name>Application SmartDrive</display-name>
 
+    <!-- Force UTF-8 to avoid broken accents (ex: "utilisÃ©") -->
+    <filter>
+        <filter-name>Utf8Filter</filter-name>
+        <filter-class>controller.Utf8Filter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>Utf8Filter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <jsp-config>
+        <jsp-property-group>
+            <url-pattern>*.jsp</url-pattern>
+            <page-encoding>UTF-8</page-encoding>
+        </jsp-property-group>
+    </jsp-config>
+
     <welcome-file-list>
         <welcome-file>pages/index.jsp</welcome-file>
     </welcome-file-list>
@@ -28,6 +45,15 @@ version="2.4">
     <servlet-mapping>
         <servlet-name>Serveur</servlet-name>
         <url-pattern>/show/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>Admin</servlet-name>
+        <servlet-class>controller.AdminServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>Admin</servlet-name>
+        <url-pattern>/admin/*</url-pattern>
     </servlet-mapping>
 
     <servlet>

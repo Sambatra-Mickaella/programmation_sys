@@ -17,7 +17,9 @@ public class FileManager {
 
     private final Path quotasPath;
     private final Path permsPath;
-    
+
+    private volatile long quotasLastModifiedMs = -1L;
+
     public FileManager() {
         this.quotasPath = resolveConfigPath("quotas.json", "SMARTDRIVE_QUOTAS_PATH", "smartdrive.quotasPath", DEFAULT_QUOTAS_RELATIVE);
         this.permsPath = resolveConfigPath("permissions.json", "SMARTDRIVE_PERMISSIONS_PATH", "smartdrive.permissionsPath", DEFAULT_PERMS_RELATIVE);
@@ -25,7 +27,40 @@ public class FileManager {
         reloadPermissions();
     }
     public synchronized Long getQuota(String user) {
+        maybeReloadQuotas();
         return quotas.get(user);
+    }
+
+    private void maybeReloadQuotas() {
+        try {
+            File f = quotasPath.toFile();
+            long lm = f.exists() ? f.lastModified() : -1L;
+            if (lm > 0 && lm != quotasLastModifiedMs) {
+                reloadQuotas();
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
+    public synchronized boolean setQuota(String user, long quotaBytes) {
+        if (user == null || user.trim().isEmpty())
+            return false;
+        if (quotaBytes < 0)
+            quotaBytes = 0;
+        quotas.put(user.trim(), quotaBytes);
+        saveQuotas();
+        return true;
+    }
+
+    public synchronized boolean removeUserQuota(String user) {
+        if (user == null || user.trim().isEmpty())
+            return false;
+        String u = user.trim();
+        if (!quotas.containsKey(u))
+            return false;
+        quotas.remove(u);
+        saveQuotas();
+        return true;
     }
 
     private static Path resolveConfigPath(String filename, String envVar, String sysProp, String defaultRelative) {
@@ -79,6 +114,11 @@ public class FileManager {
                 quotas.put(user, q);
             }
             System.out.println("[FileManager] Quotas chargés : " + quotas);
+            try {
+                File f = quotasPath.toFile();
+                quotasLastModifiedMs = f.exists() ? f.lastModified() : -1L;
+            } catch (Exception ignored) {
+            }
         } catch (Exception e) {
             System.err.println("Erreur chargement quotas (" + quotasPath + ") : " + e);
         }
@@ -107,12 +147,14 @@ public class FileManager {
     }
 
     public synchronized boolean hasEnoughQuota(String user, long needed) {
+        maybeReloadQuotas();
         Long current = quotas.get(user);
         if (current == null) return false;
         return current >= needed;
     }
 
     public synchronized void consumeQuota(String user, long size) {
+        maybeReloadQuotas();
         Long current = quotas.get(user);
         if (current != null) {
             quotas.put(user, Math.max(0, current - size));

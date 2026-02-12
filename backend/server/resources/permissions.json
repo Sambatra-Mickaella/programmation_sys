@@ -2,5 +2,5 @@
   "alice": ["read","write"],
   "bob": ["read","write"],
   "micka": ["read","write"],
-  "ntsoa": ["read","write"]
+  "Tsoa": ["read","write"]
 }

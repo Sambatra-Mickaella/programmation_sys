@@ -15,15 +15,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/assets/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <title>SmartDrive - Demandes</title>
 </head>
-<body class="bg-dark text-light">
-    <nav class="navbar navbar-dark bg-black border-bottom border-primary">
+<body class="bg-light">
+    <nav class="navbar navbar-light bg-white border-bottom">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold" href="<%= request.getContextPath() %>/show/partages">Partages</a>
-            <span class="navbar-text text-info"><i class="bi bi-inbox me-1"></i>Demandes reçues</span>
+            <span class="navbar-text text-muted"><i class="bi bi-inbox me-1"></i>Demandes reçues</span>
         </div>
     </nav>
 
@@ -36,11 +36,11 @@
                     <div class="alert alert-info"><%= message %></div>
                 <% } %>
 
-                <div class="card bg-black border border-secondary">
-                    <div class="card-header text-info fw-bold">Demandes d'accès à vos fichiers</div>
+                <div class="card shadow-sm">
+                    <div class="card-header fw-bold">Demandes d'accès à vos fichiers</div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-dark table-striped mb-0">
+                            <table class="table table-striped mb-0">
                                 <thead>
                                     <tr>
                                         <th>Demandeur</th>
@@ -101,7 +101,7 @@
         </div>
     </div>
 
-    <script src="../assets/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="<%= request.getContextPath() %>/assets/bootstrap/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
 

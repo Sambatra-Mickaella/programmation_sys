@@ -9,10 +9,22 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 public class ShareRequestManager {
-    private static final String REQUESTS_PATH = "server/resources/share_requests.json";
+    private static File resolveRequestsFile() {
+        // Override possible: SMARTDRIVE_SHARE_REQUESTS_PATH /
+        // -Dsmartdrive.shareRequestsPath
+        try {
+            return StoragePaths.resolveServerResourcePath(
+                    "share_requests.json",
+                    "SMARTDRIVE_SHARE_REQUESTS_PATH",
+                    "smartdrive.shareRequestsPath",
+                    "resources/share_requests.json").toFile();
+        } catch (Exception e) {
+            return new File("resources/share_requests.json");
+        }
+    }
 
     private static void ensureFileExists() {
-        File f = new File(REQUESTS_PATH);
+        File f = resolveRequestsFile();
         File parent = f.getParentFile();
         if (parent != null && !parent.exists()) parent.mkdirs();
         if (!f.exists()) {
@@ -26,7 +38,7 @@ public class ShareRequestManager {
         ensureFileExists();
         try {
             JSONParser parser = new JSONParser();
-            Object parsed = parser.parse(new FileReader(REQUESTS_PATH));
+            Object parsed = parser.parse(new FileReader(resolveRequestsFile()));
             if (parsed instanceof JSONArray) return (JSONArray) parsed;
         } catch (Exception ignored) {}
         return new JSONArray();
@@ -34,7 +46,7 @@ public class ShareRequestManager {
 
     private static void saveAll(JSONArray arr) {
         ensureFileExists();
-        try (FileWriter fw = new FileWriter(REQUESTS_PATH)) {
+        try (FileWriter fw = new FileWriter(resolveRequestsFile())) {
             fw.write(arr.toJSONString());
             fw.flush();
         } catch (Exception ignored) {}

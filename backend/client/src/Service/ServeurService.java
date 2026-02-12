@@ -40,7 +40,7 @@ public class ServeurService {
         for(int i =0; i<list.size(); i++) {
             String line = list.get(i);
             String[] parts = line.split(";");
-            if(parts.length == 2) {
+            if (parts.length >= 2) {
                 nom_dossier.add(parts[0].trim());
             }
         }
@@ -48,19 +48,21 @@ public class ServeurService {
     }
 
     public static int getStockageUtiliser(List<String> list) {
-        int total = 0;
+        long total = 0;
         for(int i=0; i<list.size(); i++) {
             String line = list.get(i);
             String[] parts = line.split(";");
-            if(parts.length == 2) {
+            if (parts.length >= 2) {
                 try {
-                    total += Integer.parseInt(parts[1].trim());
+                    total += Long.parseLong(parts[1].trim());
                 } catch (NumberFormatException e) {
                     System.out.println("Format de stockage invalide: " + parts[1]);
                 }
             }
         }
-        return total;
+        if (total > Integer.MAX_VALUE)
+            return Integer.MAX_VALUE;
+        return (int) total;
     }
 
     public static long getQuotaUser(BufferedReader in, PrintWriter out) throws IOException {
@@ -291,6 +293,189 @@ public class ServeurService {
         } catch (Exception e) {
             System.out.println("Erreur pendant le téléchargement : " + e.getMessage());
         }
+    }
+
+    public static String deleteToTrash(BufferedReader in, PrintWriter out, String filename) throws IOException {
+        out.println("DELETE;" + filename);
+        out.flush();
+        String resp = in.readLine();
+        return resp == null ? "ERROR" : resp;
+    }
+
+    public static List<String> listTrash(BufferedReader in, PrintWriter out) throws IOException {
+        out.println("TRASH_LIST");
+        out.flush();
+        List<String> rows = new ArrayList<>();
+        String countLine = in.readLine();
+        if (countLine == null)
+            return rows;
+        int count = 0;
+        try {
+            count = Integer.parseInt(countLine.trim());
+        } catch (Exception ignored) {
+        }
+        for (int i = 0; i < count; i++) {
+            String line = in.readLine();
+            if (line != null)
+                rows.add(line);
+        }
+        return rows;
+    }
+
+    public static String trashRestore(BufferedReader in, PrintWriter out, String id) throws IOException {
+        out.println("TRASH_RESTORE;" + id);
+        out.flush();
+        String resp = in.readLine();
+        return resp == null ? "ERROR" : resp;
+    }
+
+    public static String trashPurge(BufferedReader in, PrintWriter out, String idOrAll) throws IOException {
+        out.println("TRASH_PURGE;" + idOrAll);
+        out.flush();
+        String resp = in.readLine();
+        return resp == null ? "ERROR" : resp;
+    }
+
+    public static List<String> listVersions(BufferedReader in, PrintWriter out, String filename) throws IOException {
+        out.println("VERSIONS;" + filename);
+        out.flush();
+        List<String> rows = new ArrayList<>();
+        String countLine = in.readLine();
+        if (countLine == null)
+            return rows;
+        int count = 0;
+        try {
+            count = Integer.parseInt(countLine.trim());
+        } catch (Exception ignored) {
+        }
+        for (int i = 0; i < count; i++) {
+            String line = in.readLine();
+            if (line != null)
+                rows.add(line);
+        }
+        return rows;
+    }
+
+    public static String restoreVersion(BufferedReader in, PrintWriter out, String filename, String versionId)
+            throws IOException {
+        out.println("RESTORE_VERSION;" + filename + ";" + versionId);
+        out.flush();
+        String resp = in.readLine();
+        return resp == null ? "ERROR" : resp;
+    }
+
+    public static List<String> listNotifications(BufferedReader in, PrintWriter out) throws IOException {
+        out.println("NOTIFS");
+        out.flush();
+        List<String> rows = new ArrayList<>();
+        String countLine = in.readLine();
+        if (countLine == null)
+            return rows;
+        int count = 0;
+        try {
+            count = Integer.parseInt(countLine.trim());
+        } catch (Exception ignored) {
+        }
+        for (int i = 0; i < count; i++) {
+            String line = in.readLine();
+            if (line != null)
+                rows.add(line);
+        }
+        return rows;
+    }
+
+    public static String clearNotifications(BufferedReader in, PrintWriter out) throws IOException {
+        out.println("NOTIFS_CLEAR");
+        out.flush();
+        String resp = in.readLine();
+        return resp == null ? "ERROR" : resp;
+    }
+
+    // ================= ADMIN (TCP sockets, no WebSocket) =================
+    public static List<String> adminListUsers(BufferedReader in, PrintWriter out) throws IOException {
+        out.println("ADMIN_USERS");
+        out.flush();
+        List<String> rows = new ArrayList<>();
+        String countLine = in.readLine();
+        if (countLine == null)
+            return rows;
+        String trimmed = countLine.trim();
+        if (trimmed.startsWith("ERROR"))
+            throw new IOException(trimmed);
+        int count = 0;
+        try {
+            count = Integer.parseInt(trimmed);
+        } catch (Exception ignored) {
+        }
+        for (int i = 0; i < count; i++) {
+            String line = in.readLine();
+            if (line != null)
+                rows.add(line);
+        }
+        return rows;
+    }
+
+    public static String adminStorage(BufferedReader in, PrintWriter out) throws IOException {
+        out.println("ADMIN_STORAGE");
+        out.flush();
+        String resp = in.readLine();
+        return resp == null ? "ERROR" : resp;
+    }
+
+    public static List<String> adminLogs(BufferedReader in, PrintWriter out, int limit) throws IOException {
+        out.println("ADMIN_LOGS;" + limit);
+        out.flush();
+        List<String> rows = new ArrayList<>();
+        String countLine = in.readLine();
+        if (countLine == null)
+            return rows;
+        String trimmed = countLine.trim();
+        if (trimmed.startsWith("ERROR"))
+            throw new IOException(trimmed);
+        int count = 0;
+        try {
+            count = Integer.parseInt(trimmed);
+        } catch (Exception ignored) {
+        }
+        for (int i = 0; i < count; i++) {
+            String line = in.readLine();
+            if (line != null)
+                rows.add(line);
+        }
+        return rows;
+    }
+
+    public static String adminMonitor(BufferedReader in, PrintWriter out) throws IOException {
+        out.println("ADMIN_MONITOR");
+        out.flush();
+        String resp = in.readLine();
+        return resp == null ? "ERROR" : resp;
+    }
+
+    public static List<String> adminListUserFiles(BufferedReader in, PrintWriter out, String owner) throws IOException {
+        out.println("ADMIN_LIST_FILES;" + owner);
+        out.flush();
+
+        List<String> rows = new ArrayList<>();
+        String countLine = in.readLine();
+        if (countLine == null)
+            return rows;
+        String trimmed = countLine.trim();
+        if (trimmed.startsWith("ERROR"))
+            throw new IOException(trimmed);
+
+        int count = 0;
+        try {
+            count = Integer.parseInt(trimmed);
+        } catch (Exception ignored) {
+        }
+        for (int i = 0; i < count; i++) {
+            String line = in.readLine();
+            if (line != null)
+                rows.add(line);
+        }
+
+        return rows;
     }
 
 }

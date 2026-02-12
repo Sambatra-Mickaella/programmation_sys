@@ -1,3 +1,4 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="model.User" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.ArrayList" %>
@@ -16,16 +17,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/assets/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <title>SmartDrive - Partages</title>
 </head>
-<body class="bg-dark text-light">
-    <nav class="navbar navbar-dark bg-black border-bottom border-primary">
+<body class="bg-light">
+    <nav class="navbar navbar-light bg-white border-bottom">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold" href="#">SmartDrive</a>
             <div class="d-flex gap-2">
-                <a class="btn btn-outline-info btn-sm" href="<%= request.getContextPath() %>/show/partages_demandes">
+                <a class="btn btn-outline-primary btn-sm" href="<%= request.getContextPath() %>/show/partages_demandes">
                     <i class="bi bi-inbox me-1"></i>Demandes reçues
                 </a>
             </div>
@@ -38,7 +39,7 @@
 
             <main class="col-12 col-md-9 col-lg-10 p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h3 class="text-info mb-0"><i class="bi bi-share-fill me-2"></i>Partages</h3>
+                    <h3 class="text-primary mb-0"><i class="bi bi-share-fill me-2"></i>Partages</h3>
                 </div>
 
                 <% if (message != null) { %>
@@ -56,9 +57,9 @@
                             String ownerUrl = request.getContextPath() + "/show/partages_fichiers?owner=" + java.net.URLEncoder.encode(u, "UTF-8");
                     %>
                         <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-                            <div class="card bg-black border border-secondary h-100">
+                            <div class="card border h-100 shadow-sm">
                                 <div class="card-body d-flex flex-column">
-                                    <h5 class="card-title text-info mb-3">
+                                    <h5 class="card-title text-primary mb-3">
                                         <i class="bi bi-person-circle me-2"></i><%= u %>
                                     </h5>
                                     <div class="mt-auto">
@@ -81,6 +82,6 @@
         </div>
     </div>
 
-    <script src="../assets/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="<%= request.getContextPath() %>/assets/bootstrap/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

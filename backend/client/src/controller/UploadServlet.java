@@ -52,7 +52,7 @@ public class UploadServlet extends HttpServlet {
 
         Serveur serveur = null;
         try {
-            serveur = new Serveur("127.0.0.1", 2121);
+            serveur = BackendConfig.newServeur();
             serveur.connect();
 
             PrintWriter srvOut = serveur.getOutWriter();

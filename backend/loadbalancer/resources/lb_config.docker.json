@@ -1,0 +1,10 @@
+{
+  "lb_port": 2100,
+  "servers": [
+    {"ip": "server1", "port": 2121},
+    {"ip": "server2", "port": 2122},
+    {"ip": "server3", "port": 2123}
+  ],
+  "max_clients_per_server": 1,
+  "round_robin": true
+}

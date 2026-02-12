@@ -1,0 +1,66 @@
+version: "3.8"
+
+services:
+  server1:
+    build:
+      context: ./backend/server
+    command: ["2121"]
+    ports:
+      - "2121:2121"
+      - "2221:2221"
+    volumes:
+      - ./backend/server/resources:/app/resources
+      - ./backend/server/shared_storage:/app/shared_storage
+    restart: unless-stopped
+
+  server2:
+    build:
+      context: ./backend/server
+    command: ["2122"]
+    ports:
+      - "2122:2122"
+      - "2222:2222"
+    volumes:
+      - ./backend/server/resources:/app/resources
+      - ./backend/server/shared_storage:/app/shared_storage
+    restart: unless-stopped
+
+  server3:
+    build:
+      context: ./backend/server
+    command: ["2123"]
+    ports:
+      - "2123:2123"
+      - "2223:2223"
+    volumes:
+      - ./backend/server/resources:/app/resources
+      - ./backend/server/shared_storage:/app/shared_storage
+    restart: unless-stopped
+
+  loadbalancer:
+    build:
+      context: ./backend/loadbalancer
+    ports:
+      - "2100:2100"
+    volumes:
+      - ./backend/loadbalancer/resources:/app/resources:ro
+    environment:
+      SMARTDRIVE_LB_CONFIG: /app/resources/lb_config.docker.json
+    depends_on:
+      - server1
+      - server2
+      - server3
+    restart: unless-stopped
+    
+
+  web:
+    build:
+      context: ./backend/client
+    ports:
+      - "8080:8080"
+    depends_on:
+      - loadbalancer
+    environment:
+      SMARTDRIVE_BACKEND_HOST: loadbalancer
+      SMARTDRIVE_BACKEND_PORT: "2100"
+    restart: unless-stopped

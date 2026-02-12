@@ -2,6 +2,7 @@ package model;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.net.InetSocketAddress;
 import java.io.PrintWriter;
 import java.net.Socket;
 
@@ -34,9 +35,26 @@ public class Serveur {
         this.port = port;
     }
 
+    private static int readEnvInt(String key, int defaultValue) {
+        try {
+            String v = System.getenv(key);
+            if (v == null || v.isBlank())
+                return defaultValue;
+            return Integer.parseInt(v.trim());
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
+
     // Connexion au serveur
     public void connect() throws Exception {
-        this.socket = new Socket(this.ip, this.port);
+        int connectTimeoutMs = readEnvInt("SMARTDRIVE_CONNECT_TIMEOUT_MS", 3000);
+        int readTimeoutMs = readEnvInt("SMARTDRIVE_READ_TIMEOUT_MS", 7000);
+
+        Socket s = new Socket();
+        s.connect(new InetSocketAddress(this.ip, this.port), connectTimeoutMs);
+        s.setSoTimeout(readTimeoutMs);
+        this.socket = s;
         this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         this.out = new PrintWriter(socket.getOutputStream(), true);
     }

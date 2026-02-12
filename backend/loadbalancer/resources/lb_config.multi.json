@@ -1,0 +1,8 @@
+{
+  "lb_port": 2100,
+  "servers": [
+    {"ip": "127.0.0.1", "port": 2121}
+  ],
+  "max_clients_per_server": 1,
+  "round_robin": true
+}

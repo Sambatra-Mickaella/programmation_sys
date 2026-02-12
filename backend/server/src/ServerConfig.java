@@ -3,7 +3,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 public class ServerConfig {
-    private static final String DEFAULT_CONFIG_PATH = "server/resources/server_config.json";
+    private static final String DEFAULT_CONFIG_PATH = "resources/server_config.json";
 
     private String storageRoot = "shared_storage";
     private String slaveHost = "127.0.0.1";
