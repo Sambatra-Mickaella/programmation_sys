@@ -1,7 +1,7 @@
 compilation et exec:
 cd backend
 via server:
- javac -cp "lib/json-simple-1.1.1.jar:client/lib/servlet-api.jar" -d classes @sources.txt
+ javac -cp "lib/json-simple-1.1.1.jar" -d classes @sources.txt
  java -cp "lib/json-simple-1.1.1.jar:classes" MainServer
 
 

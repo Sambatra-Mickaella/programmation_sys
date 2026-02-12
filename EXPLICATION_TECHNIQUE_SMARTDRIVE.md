@@ -3,8 +3,7 @@
 Ce document explique **le fonctionnement du code** (qui fait quoi, comment les données circulent, quel protocole est utilisé) pour pouvoir répondre précisément aux questions du prof.
 
 > Contrainte clé du projet : **uniquement des sockets TCP Java** (`ServerSocket`/`Socket`).
-> - Le navigateur **ne parle jamais directement** au serveur TCP.
-> - La partie Web (JSP/Servlet) sert de **pont HTTP → TCP**.
+> - L’UI est une application **desktop Swing** qui se connecte en TCP.
 > - **Aucun WebSocket** (pas d’API `javax.websocket` / `jakarta.websocket`, pas de handshake `Upgrade: websocket`).
 
 ---
@@ -15,8 +14,7 @@ Ce document explique **le fonctionnement du code** (qui fait quoi, comment les d
 
 ```mermaid
 flowchart LR
-  B[Browser] -->|HTTP| T["Tomcat 10 (JSP + Servlet)"]
-  T -->|TCP Socket| LB["Load Balancer TCP (2100)"]
+  C["Client Swing (Desktop)"] -->|TCP Socket| LB["Load Balancer TCP (2100)"]
   LB -->|TCP Socket| S1["Primary Server (2121)"]
   LB -->|TCP Socket| S2["Primary Server (2122)"]
   LB -->|TCP Socket| S3["Primary Server (2123)"]
@@ -32,13 +30,13 @@ flowchart LR
 
 ### 1.2 Responsabilités
 
-- **Web (Tomcat / JSP / Servlet)** :
-  - Gère les pages, formulaires, sessions HTTP, affichage.
-  - Transforme des actions Web en **commandes TCP** envoyées au backend.
-  - Exemple : login via formulaire → servlet ouvre un socket TCP → envoie `LOGIN;user;pass`.
+- **Client Swing (desktop)** :
+  - Affiche l’interface (pages, tableaux, actions) côté utilisateur/admin.
+  - Envoie directement les **commandes TCP** au backend.
+  - Exemple : login → le client ouvre un socket TCP → envoie `LOGIN;user;pass`.
 
 - **Load balancer TCP** :
-  - Reçoit une connexion TCP (client = servlets ou client CLI).
+  - Reçoit une connexion TCP (client = Swing ou client CLI).
   - Choisit un serveur primaire (round-robin / sticky possible) et **relaye le flux TCP brut** (texte + binaire) dans les deux sens.
   - Peut refuser si tous les serveurs sont saturés (`max_clients_per_server`).
 
@@ -54,7 +52,6 @@ flowchart LR
 
 - Load balancer : `2100` (voir `backend/loadbalancer/resources/lb_config.json`)
 - Primaires : `2121`, `2122`, `2123` (config LB)
-- Web : `8080` (Tomcat)
 - Notifications inter-primaires : **port du primaire + 100** (ex : 2121 → 2221)
 
 ### 2.2 Fichiers de configuration importants
@@ -241,7 +238,7 @@ Il y a deux niveaux :
 
 ---
 
-## 8) Admin : commandes et panneau web
+## 8) Admin : commandes et interface Swing
 
 ### 8.1 Commandes admin côté TCP
 
@@ -259,24 +256,20 @@ Backend : `ClientThread`.
 
 Toutes ces commandes passent par `ensureAdmin`.
 
-### 8.2 Panneau admin web (HTTP → TCP)
+### 8.2 Pages admin Swing
 
-- Le navigateur appelle des routes `/admin/...`.
-- Les servlets ouvrent une socket TCP vers le backend (souvent via le LB), envoient les `ADMIN_*`, puis rendent une JSP.
-
-Les pages admin ont une pagination (10 lignes/page) côté servlet.
+- Le client Swing ouvre une socket TCP vers le backend (souvent via le LB) et envoie les `ADMIN_*`.
+- L’affichage est fait côté desktop (tables/cartes), sans HTTP.
 
 ---
 
-## 9) Partie Web : pourquoi elle n’est PAS du WebSocket
+## 9) Pourquoi ce projet n’est PAS du WebSocket
 
-- Le navigateur parle en HTTP (JSP/Servlet sur Tomcat).
-- La servlet, côté serveur web, ouvre **une socket TCP Java classique** vers le LB/backend.
+- Le client Swing ouvre **une socket TCP Java classique** vers le LB/backend.
 - Il n’y a pas de `Upgrade: websocket`, ni de session WS.
 
 Fichiers clés :
-- Pont TCP côté web : `backend/client/src/model/Serveur.java` (ouvre `Socket`, `BufferedReader`, `PrintWriter`)
-- Contrôleurs servlet : `backend/client/src/controller/*.java`
+- Client Swing : `backend/client/src/desktop/SmartDriveBootstrapApp.java`
 - Appels protocole : `backend/client/src/Service/ServeurService.java`
 
 ---
@@ -285,12 +278,12 @@ Fichiers clés :
 
 Scripts racine :
 
-- `./docker-up.sh` : build + run (serveurs + LB + Tomcat) sur un réseau docker `smartdrive_net`
+- `./docker-up.sh` : build + run (serveurs + LB) sur un réseau docker `smartdrive_net`
 - `./docker-down.sh` : arrêt + nettoyage
 
 Points importants :
 - Les serveurs primaires montent des volumes `resources/` et `shared_storage/`.
-- Le web (Tomcat) reçoit `SMARTDRIVE_BACKEND_HOST=loadbalancer` et `SMARTDRIVE_BACKEND_PORT=2100`.
+- Le load balancer publie le port `2100` et redirige vers les primaires.
 
 ---
 
@@ -334,3 +327,12 @@ Points importants :
 - Audit : `backend/server/src/AuditLogger.java`
 - Bridge TCP côté web : `backend/client/src/model/Serveur.java`
 - Service protocole côté web : `backend/client/src/Service/ServeurService.java`
+
+
+
+
+soit :
+Démarrer le backend :
+ docker-compose up -d --build (ou docker-up.sh)
+Lancer Swing : bash backend/client/run-desktop.sh
+Stop backend : docker-compose down --remove-orphans (ou docker-down.sh)

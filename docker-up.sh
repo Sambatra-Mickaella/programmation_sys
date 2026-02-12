@@ -6,7 +6,6 @@ NETWORK_NAME="smartdrive_net"
 
 SERVER_IMAGE="smartdrive_server"
 LB_IMAGE="smartdrive_loadbalancer"
-WEB_IMAGE="smartdrive_web"
 
 c_rm() {
   local name="$1"
@@ -16,7 +15,6 @@ c_rm() {
 echo "[1/4] Build images"
 docker build -t "$SERVER_IMAGE" "$ROOT_DIR/backend/server"
 docker build -t "$LB_IMAGE" "$ROOT_DIR/backend/loadbalancer"
-docker build -t "$WEB_IMAGE" "$ROOT_DIR/backend/client"
 
 echo "[2/4] Create network (if needed)"
 docker network inspect "$NETWORK_NAME" >/dev/null 2>&1 || docker network create "$NETWORK_NAME" >/dev/null
@@ -26,7 +24,6 @@ c_rm smartdrive_server1
 c_rm smartdrive_server2
 c_rm smartdrive_server3
 c_rm smartdrive_loadbalancer
-c_rm smartdrive_web
 
 echo "[4/4] Start containers"
 # Primary servers (only inside Docker network)
@@ -64,13 +61,4 @@ docker run -d \
   -e SMARTDRIVE_LB_CONFIG=/app/resources/lb_config.docker.json \
   "$LB_IMAGE" >/dev/null
 
-# Web (Tomcat)
-docker run -d \
-  --name smartdrive_web \
-  --network "$NETWORK_NAME" \
-  -p 8080:8080 \
-  -e SMARTDRIVE_BACKEND_HOST=loadbalancer \
-  -e SMARTDRIVE_BACKEND_PORT=2100 \
-  "$WEB_IMAGE" >/dev/null
-
-echo "OK: http://localhost:8080/SmartDrive/"
+echo "OK: backend is up. Load balancer: tcp://localhost:2100"

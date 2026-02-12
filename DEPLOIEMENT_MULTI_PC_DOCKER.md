@@ -19,10 +19,9 @@ Ce dossier contient déjà :
 - `resources/` (users/quotas/permissions/config)
 - `shared_storage/` (stockage sur disque)
 
-### PC1 (load balancer + web + server1)
+### PC1 (load balancer + server1)
 Copie au minimum :
 - `backend/loadbalancer/`
-- `backend/client/`
 - `backend/server/` (pour server1)
 
 ## 2) Réseau / Ports à ouvrir
@@ -33,7 +32,6 @@ Sur le réseau local (LAN), il faut que PC1 puisse joindre PC2/PC3 sur :
 
 Et côté PC1, exposer pour les tests :
 - `2100` (Load Balancer)
-- `8080` (Web Tomcat)
 - (optionnel) `2121` et `2221`
 
 ## 3) Compose par PC
@@ -91,7 +89,7 @@ services:
 Lancement :
 - `docker-compose up -d --build`
 
-### 3.3 PC1 : load balancer + web + server1
+### 3.3 PC1 : load balancer + server1
 
 Sur PC1 (à la racine du projet, ou dans un dossier qui contient `backend/`), crée un fichier LB **spécial multi‑PC**.
 
@@ -141,17 +139,6 @@ services:
       SMARTDRIVE_LB_CONFIG: /app/resources/lb_config.multi.json
     restart: unless-stopped
 
-  web:
-    build:
-      context: ./backend/client
-    ports:
-      - "8080:8080"
-    depends_on:
-      - loadbalancer
-    environment:
-      SMARTDRIVE_BACKEND_HOST: loadbalancer
-      SMARTDRIVE_BACKEND_PORT: "2100"
-    restart: unless-stopped
 ```
 
 Lancement :
@@ -163,7 +150,10 @@ Lancement :
 - depuis PC1 : `nc -vz IP_PC2 2122` et `nc -vz IP_PC3 2123`
 
 2) Sur PC1 :
-- ouvrir `http://IP_PC1:8080/SmartDrive/`
+- lancer le client Swing sur un PC du LAN en pointant vers `IP_PC1:2100`
+
+Exemple (sur la machine qui lance Swing) :
+- `SMARTDRIVE_BACKEND_HOST=IP_PC1 SMARTDRIVE_BACKEND_PORT=2100 bash backend/client/run-desktop.sh`
 
 ## 5) Option “stockage partagé” (conseillé pour éviter des incohérences)
 

@@ -51,16 +51,3 @@ services:
       - server2
       - server3
     restart: unless-stopped
-    
-
-  web:
-    build:
-      context: ./backend/client
-    ports:
-      - "8080:8080"
-    depends_on:
-      - loadbalancer
-    environment:
-      SMARTDRIVE_BACKEND_HOST: loadbalancer
-      SMARTDRIVE_BACKEND_PORT: "2100"
-    restart: unless-stopped

@@ -7,13 +7,13 @@ Projet L3 “partage de fichiers” basé sur des **sockets TCP Java** (pas du W
 - **Oui : projet sockets (TCP)** avec `java.net.ServerSocket` côté serveur et `java.net.Socket` côté client.
 - **Non : WebSocket**. Il n’y a pas de handshake HTTP “Upgrade: websocket”, ni d’API `javax.websocket` / `jakarta.websocket`.
 
-Le projet a aussi une **interface web (JSP/Servlet)** : le navigateur parle en **HTTP** au serveur Tomcat, et les servlets font un **pont** vers le backend via une connexion **TCP socket**.
+Le projet utilise une **interface desktop Swing** : l’application parle **directement** au backend via une connexion **TCP socket**.
 
 ## 2) Architecture (dossiers)
 
 - `backend/server/` : serveur de stockage (TCP), gestion utilisateurs/quota/demandes de partage
 - `backend/loadbalancer/` : répartiteur TCP (redirige un client vers un serveur primaire)
-- `backend/client/` : application web (WAR Tomcat) + code Java client utilisé par les servlets
+- `backend/client/` : client Java + interface desktop Swing
 - `backend/server/shared_storage/` : stockage fichiers par utilisateur
 
 ## 3) Protocole applicatif (texte + binaire)
@@ -73,26 +73,25 @@ Depuis : `backend/server/tools/`
 
 Ça démarre : primaires + load balancer (2100) + un `MainClient` de test.
 
-## 6) Lancer l’interface web (Tomcat)
+## 6) Client desktop Swing (sans navigateur)
 
-La partie web est dans `backend/client/`.
-
-Prérequis : Tomcat installé (le script vise `/opt/tomcat`).
+L’UI est disponible en **Swing** : elle parle **directement au backend TCP** (même protocole que `MainClient`).
 
 Depuis : `backend/client/`
 
-- `./deploy.sh`
+- `bash run-desktop.sh`
 
-Ensuite :
+Configuration (au choix) :
 
-- ouvrir `http://localhost:8080/SmartDrive/`
+- variables d’environnement : `SMARTDRIVE_BACKEND_HOST` / `SMARTDRIVE_BACKEND_PORT`
+- ou `backend/client/resources/config.json` (`server_ip` / `server_port`)
 
-Remarque : les servlets se connectent au backend (par défaut `127.0.0.1:2121`).
+Important : Swing = **UI**. Il faut quand même démarrer le **backend** (serveurs + load balancer).
 
 
 ## 6bis) Option Docker / docker-compose (recommandé pour éviter les problèmes de versions)
 
-Si tes amis ont des versions différentes de Tomcat/JDK, le plus simple est d’utiliser Docker.
+Si tes amis ont des versions différentes de JDK, le plus simple est d’utiliser Docker.
 
 Depuis la racine du repo :
 
@@ -111,12 +110,6 @@ Note : `docker-compose` (Compose v1, binaire `docker-compose`) est souvent **inc
 Services exposés :
 
 - `loadbalancer` : `localhost:2100`
-- `web` (Tomcat) : `http://localhost:8080/SmartDrive/`
-
-Les serveurs primaires (`server1/2/3`) ne sont pas exposés sur l’hôte (pas de mapping de ports) : ils sont accessibles uniquement depuis le réseau Docker par le `loadbalancer`.
-
-La config du LB en Docker est : `backend/loadbalancer/resources/lb_config.docker.json` (utilise les noms `server1/server2/server3`).
-
 
 ## 7) Configuration (users, permissions, quotas)
 
@@ -133,11 +126,9 @@ Comptes de démo (par défaut) :
 - `micka` / `1234`
 - `Tsoa` / `1234` (admin)
 
-### Admin Panel (web)
+### Admin (Swing)
 
-Un compte admin (ex: `micka`) peut accéder au panneau :
-
-- URL : `http://localhost:8080/SmartDrive/admin/dashboard`
+Un compte admin (ex: `Tsoa`) peut accéder aux pages d’administration directement dans l’app Swing.
 
 Fonctionnalités :
 
@@ -145,8 +136,6 @@ Fonctionnalités :
 - **Gestion stockage** : total utilisé, statut “slave” (reachable/unreachable), réplication (script/simulation)
 - **Logs & Audit** : historique upload/download/delete/share
 - **Monitoring** : CPU/RAM/disque + trafic (trafic simulé)
-
-Important : le panneau admin passe par les **Servlets** qui parlent au backend via une **connexion TCP socket** (toujours pas de WebSocket).
 
 Le code supporte aussi des overrides via variables d’environnement / propriétés Java (selon les fichiers) :
 
@@ -158,7 +147,7 @@ Le code supporte aussi des overrides via variables d’environnement / propriét
 ## 8) “Ça marche déjà bien ?” (état)
 
 Sur le papier, l’architecture est cohérente (TCP + protocole texte + transferts binaires + partage + quotas).
-Par contre je n’ai **pas exécuté** ton projet ici : le bon verdict “ça marche” dépend de ton environnement (JDK/Tomcat, chemins, ports, droits fichiers).
+Par contre je n’ai **pas exécuté** ton projet ici : le bon verdict “ça marche” dépend de ton environnement (JDK, chemins, ports, droits fichiers).
 
 ## 9) Checklist démo (pour le prof)
 

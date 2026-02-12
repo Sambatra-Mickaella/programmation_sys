@@ -11,8 +11,8 @@ Résumé des modifications apportées au projet pour intégrer le load balancer,
    - Ajout de chargement de config depuis resources/config.json (server_ip, server_port).
    - Suppression de l'auto-login (prompt toujours pour user/pass).
 
-4. backend/client/src/controller/UserServlet.java
-   - Chargement de config.json depuis classpath pour server_ip/port.
+4. backend/client/src/controller/BackendConfig.java
+   - Chargement de config.json (server_ip/server_port) + overrides via variables d’environnement.
 
 5. backend/client/resources/config.json
    - server_port changé à 2100 (load balancer).
