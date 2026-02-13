@@ -19,9 +19,10 @@ Ce dossier contient déjà :
 - `resources/` (users/quotas/permissions/config)
 - `shared_storage/` (stockage sur disque)
 
-### PC1 (load balancer + server1)
+### PC1 (load balancer + JavaFX + server1)
 Copie au minimum :
 - `backend/loadbalancer/`
+- `backend/client/`
 - `backend/server/` (pour server1)
 
 ## 2) Réseau / Ports à ouvrir
@@ -38,7 +39,7 @@ Et côté PC1, exposer pour les tests :
 
 > Les fichiers `docker-compose` **changent** selon le PC, parce que :
 > - PC2/PC3 ne lancent que “server”
-> - PC1 lance LB + web (et éventuellement server1)
+> - PC1 lance LB + JavaFX (et éventuellement server1)
 > - le LB doit connaître les **IP réelles** des serveurs (pas `server2`, `server3` comme en Docker mono‑machine)
 
 Note : sur certaines machines (comme la tienne), tu as `docker-compose` (Compose v1) mais pas `docker compose` (Compose v2). Dans ce cas, utilise toujours `docker-compose ...`.
@@ -89,7 +90,7 @@ services:
 Lancement :
 - `docker-compose up -d --build`
 
-### 3.3 PC1 : load balancer + server1
+### 3.3 PC1 : load balancer + JavaFX + server1
 
 Sur PC1 (à la racine du projet, ou dans un dossier qui contient `backend/`), crée un fichier LB **spécial multi‑PC**.
 
@@ -139,6 +140,23 @@ services:
       SMARTDRIVE_LB_CONFIG: /app/resources/lb_config.multi.json
     restart: unless-stopped
 
+  javafx:
+    build:
+      context: ./backend/client
+      dockerfile: Dockerfile.javafx
+    depends_on:
+      - loadbalancer
+    environment:
+      SMARTDRIVE_BACKEND_HOST: loadbalancer
+      SMARTDRIVE_BACKEND_PORT: "2100"
+      DISPLAY: "${DISPLAY:-:0}"
+      GDK_BACKEND: x11
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - ${HOME:-/tmp}:/host-home
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
 ```
 
 Lancement :
@@ -150,10 +168,11 @@ Lancement :
 - depuis PC1 : `nc -vz IP_PC2 2122` et `nc -vz IP_PC3 2123`
 
 2) Sur PC1 :
-- lancer le client Swing sur un PC du LAN en pointant vers `IP_PC1:2100`
-
-Exemple (sur la machine qui lance Swing) :
-- `SMARTDRIVE_BACKEND_HOST=IP_PC1 SMARTDRIVE_BACKEND_PORT=2100 bash backend/client/run-desktop.sh`
+- exécuter avant lancement: `xhost +local:docker`
+- si Docker est lancé avec `sudo`, définir d’abord `HOME` sur ton user (ex: `export HOME=/home/<ton_user>`)
+- vérifier que `DISPLAY` est défini (ex: `echo $DISPLAY`)
+- la fenêtre JavaFX doit s’ouvrir automatiquement
+- dans le sélecteur de fichiers JavaFX, aller dans `/host-home` pour accéder aux fichiers du PC hôte
 
 ## 5) Option “stockage partagé” (conseillé pour éviter des incohérences)
 
@@ -162,4 +181,4 @@ Exemple (sur la machine qui lance Swing) :
 
 ---
 
-Si tu me donnes les IP (PC1/PC2/PC3) et où tu veux héberger le Web (PC1 ou autre), je peux te fournir les fichiers finaux tout prêts (avec les IP réelles) + la checklist firewall exacte (Ubuntu/Windows). 
+Si tu me donnes les IP (PC1/PC2/PC3), je peux te fournir les fichiers finaux tout prêts (avec les IP réelles) + la checklist firewall exacte (Ubuntu/Windows). 

@@ -51,3 +51,25 @@ services:
       - server2
       - server3
     restart: unless-stopped
+    
+
+  javafx:
+    build:
+      context: ./backend/client
+      dockerfile: Dockerfile.javafx
+    depends_on:
+      - loadbalancer
+    environment:
+      SMARTDRIVE_BACKEND_HOST: loadbalancer
+      SMARTDRIVE_BACKEND_PORT: "2100"
+      DISPLAY: "${DISPLAY:-:0}"
+      GDK_BACKEND: x11
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+      LANGUAGE: C.UTF-8
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - ${HOME:-/tmp}:/host-home
+    stdin_open: true
+    tty: true
+    restart: unless-stopped

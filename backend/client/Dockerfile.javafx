@@ -1,0 +1,33 @@
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+ENV LANGUAGE=C.UTF-8
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    openjdk-21-jdk \
+    openjfx \
+    poppler-utils \
+    ca-certificates \
+    bash \
+  && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY run-javafx.sh ./run-javafx.sh
+COPY resources/ ./resources/
+COPY lib/json-simple-1.1.1.jar ./lib/json-simple-1.1.1.jar
+COPY src/fx/ ./src/fx/
+COPY src/model/ ./src/model/
+COPY src/controller/BackendConfig.java ./src/controller/BackendConfig.java
+
+RUN chmod +x ./run-javafx.sh
+
+ENV JAVA_FX_LIB=/usr/share/openjfx/lib
+ENV SMARTDRIVE_BACKEND_HOST=loadbalancer
+ENV SMARTDRIVE_BACKEND_PORT=2100
+ENV JAVA_TOOL_OPTIONS="-Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8"
+
+CMD ["./run-javafx.sh"]

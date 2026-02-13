@@ -33,11 +33,11 @@ public class ClientThread implements Runnable {
     public void run() {
         try (
             socket;  // auto-close
-            BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            InputStream rawIn = socket.getInputStream();
             PrintWriter writer = new PrintWriter(socket.getOutputStream(), true)
         ) {
             // ================= LOGIN =================
-            String line = reader.readLine();
+            String line = readLine(rawIn);
             if (line == null || !line.startsWith("LOGIN;")) {
                 writer.println("ERROR Invalid command - LOGIN required");
                 return;
@@ -85,7 +85,7 @@ public class ClientThread implements Runnable {
             System.out.println("User logged in: " + username);
 
             // ============== COMMAND LOOP ==============
-            while ((line = reader.readLine()) != null) {
+            while ((line = readLine(rawIn)) != null) {
                 line = line.trim();
                 if (line.isEmpty()) continue;
 
@@ -163,6 +163,28 @@ public class ClientThread implements Runnable {
         } catch (Exception e) {
             System.out.println("Client " + username + " error: " + e.getMessage());
         }
+    }
+
+    // Important: ligne lue en mode binaire pur pour eviter la perte d'octets
+    // lors des commandes UPLOAD qui enchainent texte + flux binaire.
+    private static String readLine(InputStream in) throws IOException {
+        int b;
+        int cap = 256;
+        byte[] out = new byte[cap];
+        int len = 0;
+        while ((b = in.read()) != -1) {
+            if (b == '\n') break;
+            if (b == '\r') continue;
+            if (len == cap) {
+                cap *= 2;
+                byte[] n = new byte[cap];
+                System.arraycopy(out, 0, n, 0, len);
+                out = n;
+            }
+            out[len++] = (byte) b;
+        }
+        if (len == 0 && b == -1) return null;
+        return new String(out, 0, len, java.nio.charset.StandardCharsets.UTF_8);
     }
 
     private void handleUpload(String line, PrintWriter writer) throws IOException {
